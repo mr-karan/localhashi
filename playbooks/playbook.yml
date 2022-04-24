@@ -12,7 +12,6 @@
         consul_version: 1.12.0-1
         consul_enable_server: true
         consul_enable_acl: false
-        consul_bootstrap_expect: 1
         consul_encrypt_key: "{{ lookup('env','CONSUL_ENCRYPT_KEY') }}"
         # consul_acl_agent_token: "{{consul_acl_agent_token}}"
         # consul_acl_default_token: "{{consul_acl_default_token}}"
@@ -23,7 +22,6 @@
       vars:
         nomad_dc: localhashi
         nomad_version: 1.2.6
-        nomad_bootstrap_expect: 1
         nomad_encrypt_key: "{{ lookup('env','NOMAD_ENCRYPT_KEY') }}"
         nomad_enable_server: true
         nomad_enable_client: true

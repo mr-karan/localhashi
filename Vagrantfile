@@ -4,6 +4,7 @@
 LINUX_BASE_BOX = "ubuntu/focal64"
 
 SINGLE_BOX_IP_ADDRESS = "10.100.0.100"
+CLUSTER_IP_ADDRESS = ["10.100.0.11","10.100.0.12","10.100.0.13"]
 
 Vagrant.require_version ">= 2.2.19"
 
@@ -24,42 +25,42 @@ Vagrant.configure("2") do |config|
 
         # Provision consul and nomad as servers.
         vmCfg.vm.provision "ansible" do |ansible|
-            ansible.playbook = "./playbooks/single.yml"
+            ansible.playbook = "./playbooks/playbook.yml"
+            ansible.extra_vars = {
+                cluster_members: [SINGLE_BOX_IP_ADDRESS],
+                consul_bootstrap_expect: 1,
+                nomad_bootstrap_expect: 1
+            }
         end
 
 	end
 
+	# Multi node cluster
+	1.upto(3) do |n|
+		serverName = "localhashi-%02d" % [n]
+		serverIP = "10.100.0.%d" % [10 + n]
 
-    # # Provision server node.
-    # config.vm.define "server", primary: true do |server|
-    #     server.vm.box = BASE_BOX
-    #     server.vm.hostname = "server"
-    #     server.vm.network "private_network", ip: "10.100.0.100"
-    #     server.vm.network "forwarded_port", guest: 8500, host: 8500     #  Consul HTTP API
-    #     server.vm.network "forwarded_port", guest: 4646, host: 4646     #  Nomad HTTP API
+		config.vm.define serverName, autostart: false, primary: false do |vmCfg|
+			vmCfg.vm.box = LINUX_BASE_BOX
+			vmCfg.vm.hostname = serverName
+            vmCfg = configureProviders vmCfg,
+			cpus: suggestedCPUCores()
 
-    #     server = configureVirtualBox(server, 2, 2048)
+			vmCfg.vm.provider "virtualbox" do |_|
+				vmCfg.vm.network :private_network, ip: serverIP
+			end
 
-    #     # Provision consul and nomad as servers.
-    #     config.vm.provision "ansible" do |ansible|
-    #         ansible.playbook = "./playbooks/server.yml"
-    #     end
-    
-    # end
-
-    # # Client VMs
-    # 1.upto(2) do |i|
-    #     config.vm.define "client#{i}" do |client|
-    #         client.vm.box = BASE_BOX
-    #         client.vm.hostname = "client#{i}"
-    #         client.vm.network "private_network", ip: "10.100.0.%d" % [200 + i]
-
-
-    #         client = configureVirtualBox(client, 2, 2048)
-
-    #         client = configureProvisioners(client)
-    #     end
-    # end
+			# Provision consul and nomad as servers.
+			vmCfg.vm.provision "ansible" do |ansible|
+				ansible.playbook = "./playbooks/playbook.yml"
+				ansible.extra_vars = {
+					cluster_members: CLUSTER_IP_ADDRESS,
+					consul_bootstrap_expect: 3,
+					nomad_bootstrap_expect: 3
+				}
+			end
+		end
+	end
 
 end
 
