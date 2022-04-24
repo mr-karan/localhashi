@@ -1,0 +1,55 @@
+---
+- block:
+    - name: Set default value for flag
+      set_fact:
+        execute_acl_bootstrap: false
+
+    - name: Read token from bootstrapped file
+      stat:
+        path: "/etc/nomad.d/.nomad_bootstrap.json"
+      register: bootstrap_file_result
+      ignore_errors: true
+
+    - name: Override flag for signalling to bootstrap ACL
+      set_fact:
+        execute_acl_bootstrap: true
+      when:
+        - not bootstrap_file_result.stat.exists
+
+  when:
+    - nomad_node_role == 'bootstrap'
+  run_once: true
+
+- block:
+    # We use `shell` here because `>` won't work in `command`.
+    - name: Bootstrap ACL and store output in a file
+      shell: "nomad acl bootstrap -address=http://{{consul_address}}:4646 -json > {{bootstrap_acl_config_dir.path}}/bootstrap.json"
+
+    - name: Store token output in S3
+      command: "aws s3 cp {{bootstrap_acl_config_dir.path}}/bootstrap.json s3://{{nomad_bootstrap_s3}}/nomad/acl/"
+
+  when:
+    - nomad_node_role == 'bootstrap'
+    - execute_acl_bootstrap
+  run_once: true
+
+- block:
+    # At this point, this file either would be fetched from S3 or it would have been created by nomad acl bootstrap command.
+    # Read the JSON file and set the token as secret
+    - name: Read ACL master token from bootstrap file
+      command: "cat {{bootstrap_acl_config_dir.path}}/bootstrap.json"
+      register: bootstrap_config_read
+      no_log: true
+      changed_when: false
+      run_once: true
+
+    - name: Save bootstrap token from existing configuration
+      set_fact:
+        nomad_acl_bootstrap_token: "{{ bootstrap_config_read.stdout | from_json | json_query(query) }}"
+      vars:
+        query: "SecretID"
+      no_log: true
+
+  when:
+    - nomad_node_role == 'bootstrap'
+  run_once: true

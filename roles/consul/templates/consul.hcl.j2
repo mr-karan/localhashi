@@ -1,0 +1,41 @@
+datacenter = "{{consul_dc}}"
+data_dir   = "/opt/consul"
+log_level = "debug"
+encrypt = "{{consul_encrypt_key}}"
+
+retry_join           = [{{ (cluster_members)|map("to_json")|join(", ") }}]
+bind_addr   = "{{ '{{' }} GetInterfaceIP \"enp0s8\" }}"
+client_addr = "{{ '{{' }} GetInterfaceIP \"enp0s8\" }}"
+connect {
+  enabled = true
+}
+
+{% if consul_enable_server %}
+server           = true
+bootstrap_expect = {{consul_bootstrap_expect}}
+{% endif %}
+
+{% if consul_enable_acl %}
+acl = {
+    enabled = true
+    default_policy = "deny"
+    enable_token_persistence = true
+    tokens {
+      "agent" = "{{consul_acl_agent_token}}"
+      "default" = "{{consul_acl_default_token}}"
+    }
+}
+{% endif %}
+
+performance {
+  raft_multiplier = 1
+}
+
+ports {
+  grpc = 8502
+  dns  = 53
+}
+
+ui_config {
+  enabled = true
+}

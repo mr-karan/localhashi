@@ -1,0 +1,4 @@
+docker_user: "{{ ansible_user }}"
+docker_group: docker
+docker_compose_version: 1.29.2
+docker_compose_download_url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)"

@@ -1,0 +1,11 @@
+# Ansible
+*.retry
+
+# Vagrant
+.vagrant/
+
+# Misc
+*.log
+venv/
+.vscode/
+.env

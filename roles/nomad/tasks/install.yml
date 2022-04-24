@@ -1,0 +1,26 @@
+---
+# Install nomad https://learn.hashicorp.com/tutorials/nomad/get-started-install
+
+- name: Install gpg
+  become: true
+  apt:
+    name: gpg
+
+- name: Add an Apt signing key, uses whichever key is at the URL
+  become: true
+  ansible.builtin.apt_key:
+    url: https://apt.releases.hashicorp.com/gpg
+    state: present
+
+- name: Add Debian/Ubuntu Linux repository
+  become: true
+  apt_repository:
+    repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: true
+
+- name: Install nomad package
+  package:
+    name: "nomad={{ nomad_version }}"
+    state: present
+  become: true

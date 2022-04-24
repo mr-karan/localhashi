@@ -1,0 +1,7 @@
+---
+- name: start nomad
+  service:
+    name: nomad
+    state: started
+    enabled: yes
+  listen: 'start nomad'

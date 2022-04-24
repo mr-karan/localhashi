@@ -1,0 +1,99 @@
+---
+- name: Creates directory
+  file:
+    path: "{{consul_policies_dir}}"
+    state: directory
+    owner: consul
+    group: consul
+
+- name: Copy policy files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{consul_policies_dir}}/{{ item.dest }}"
+    owner: consul
+    group: consul
+  loop:
+    - { src: "acl_policies/dns.hcl.j2", dest: "dns.hcl" }
+    - { src: "acl_policies/agent.hcl.j2", dest: "agent.hcl" }
+    - { src: "acl_policies/nomad_client.hcl.j2", dest: "nomad_client.hcl" }
+    - { src: "acl_policies/nomad_server.hcl.j2", dest: "nomad_server.hcl" }
+
+# Create DNS Policy
+- block:
+    - name: Check if Consul DNS policy exists
+      ansible.builtin.shell:
+        cmd: "consul acl policy read -http-addr={{consul_address}}:8500 -name dns-policy -token={{ consul_acl_bootstrap_token }}"
+      # Ignore the error here if the policy exists.
+      ignore_errors: true
+      register: consul_dns_policy_read_result
+
+    - name: Create DNS Policy
+      ansible.builtin.shell:
+        cmd: "consul acl policy create -http-addr={{consul_address}}:8500 -token={{ consul_acl_bootstrap_token }} -name=dns-policy -description='Read only token for agents to enable DNS service discovery' -rules '@{{consul_policies_dir}}/dns.hcl'"
+      when:
+        - consul_dns_policy_read_result.rc != 0
+        - '"Failed to find policy with name dns-policy" in consul_dns_policy_read_result.stderr'
+
+  when:
+    - consul_node_role == 'bootstrap'
+  run_once: true
+
+# Create Agent Policy
+- block:
+    - name: Check if Consul Agent policy exists
+      ansible.builtin.shell:
+        cmd: "consul acl policy read -http-addr={{consul_address}}:8500 -name agent-policy -token={{ consul_acl_bootstrap_token }}"
+      # Ignore the error here if the policy exists.
+      ignore_errors: true
+      register: consul_agent_policy_read_result
+
+    - name: Create Agent Policy
+      ansible.builtin.shell:
+        cmd: "consul acl policy create -http-addr={{consul_address}}:8500 -token={{ consul_acl_bootstrap_token }} -name=agent-policy -description='Agent Token Policy' -rules '@{{consul_policies_dir}}/agent.hcl'"
+      when:
+        - consul_agent_policy_read_result.rc != 0
+        - '"Failed to find policy with name agent-policy" in consul_agent_policy_read_result.stderr'
+
+  when:
+    - consul_node_role == 'bootstrap'
+  run_once: true
+
+# Create Nomad Server Policy
+- block:
+    - name: Check if Nomad server policy exists
+      ansible.builtin.shell:
+        cmd: "consul acl policy read -http-addr={{consul_address}}:8500 -name nomad-server-policy -token={{ consul_acl_bootstrap_token }}"
+      # Ignore the error here if the policy exists.
+      ignore_errors: true
+      register: consul_nomad_server_policy_read_result
+
+    - name: Create Nomad server policy
+      ansible.builtin.shell:
+        cmd: "consul acl policy create -http-addr={{consul_address}}:8500 -token={{ consul_acl_bootstrap_token }} -name=nomad-server-policy -description='Nomad server Policy' -rules '@{{consul_policies_dir}}/nomad_server.hcl'"
+      when:
+        - consul_nomad_server_policy_read_result.rc != 0
+        - '"Failed to find policy with name nomad-server-policy" in consul_nomad_server_policy_read_result.stderr'
+
+  when:
+    - consul_node_role == 'bootstrap'
+  run_once: true
+
+# Create Nomad Client Policy
+- block:
+    - name: Check if Nomad client policy exists
+      ansible.builtin.shell:
+        cmd: "consul acl policy read -http-addr={{consul_address}}:8500 -name nomad-client-policy -token={{ consul_acl_bootstrap_token }}"
+      # Ignore the error here if the policy exists.
+      ignore_errors: true
+      register: consul_nomad_client_policy_read_result
+
+    - name: Create Nomad client policy
+      ansible.builtin.shell:
+        cmd: "consul acl policy create -http-addr={{consul_address}}:8500 -token={{ consul_acl_bootstrap_token }} -name=nomad-client-policy -description='Nomad client Policy' -rules '@{{consul_policies_dir}}/nomad_client.hcl'"
+      when:
+        - consul_nomad_client_policy_read_result.rc != 0
+        - '"Failed to find policy with name nomad-client-policy" in consul_nomad_client_policy_read_result.stderr'
+
+  when:
+    - consul_node_role == 'bootstrap'
+  run_once: true

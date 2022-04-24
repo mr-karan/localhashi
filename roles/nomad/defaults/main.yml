@@ -1,0 +1,23 @@
+---
+# File: main.yml - Default variables for Nomad
+
+cluster_members:
+  - "10.100.0.100"
+
+nomad_version: 1.2.6
+nomad_cni_version: "v1.1.1"
+
+# Config params
+nomad_dc: dc1
+nomad_bootstrap_expect: 1
+consul_address: "{{ansible_enp0s8.ipv4.address}}"
+nomad_enable_server: true
+nomad_enable_client: true
+# NOTE: Change this in playbook
+nomad_encrypt_key: jCnlucy8KmYVmtu7PykQnog7nbPoa/icPeVu7agOK74=
+
+# ACL Config.
+nomad_enable_acl: false
+nomad_acl_bootstrap: false
+
+# consul_acl_nomad_token: b771c8db-bfba-4ee1-964e-e2c7fc7faefa

@@ -1,0 +1,12 @@
+---
+# File: main.yml - Handlers for nomad
+
+- name: restart nomad
+  import_tasks: restart_nomad.yml
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: restart systemd journald
+  import_tasks: restart_systemd_journald.yml

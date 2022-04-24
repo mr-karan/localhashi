@@ -1,0 +1,15 @@
+---
+# File: main.yml - Handlers for Consul
+
+- name: restart consul
+  import_tasks: restart_consul.yml
+
+- name: reload consul configuration
+  import_tasks: reload_consul_conf.yml
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: restart systemd resolved
+  import_tasks: restart_systemd_resolved.yml

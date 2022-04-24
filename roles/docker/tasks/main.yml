@@ -1,0 +1,95 @@
+# This playbook contains docker actions that will be run on "remote" host.
+
+- name: assert variable values
+  include_tasks: assert.yml
+
+# sudo apt-get install *
+- name: install docker prerequisites
+  apt:
+    name:
+      [
+        "apt-transport-https",
+        "ca-certificates",
+        "curl",
+        "gnupg-agent",
+        "software-properties-common",
+        "python3-docker",
+        "docker-compose",
+      ]
+    state: present
+    update_cache: yes
+
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+- name: add docker's official GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+# sudo apt-key fingerprint 0EBFCD88
+- name: verify that we have the key with the fingerprint
+  apt_key:
+    id: 0EBFCD88
+    state: present
+
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+- name: set up the stable repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
+    state: present
+    update_cache: yes
+
+# sudo apt-get install docker-ce
+- name: install docker
+  apt:
+    state: present
+    update_cache: yes
+    name: ["docker-ce", "docker-ce-cli", "containerd.io"]
+  notify: start docker on boot
+
+# sudo groupadd docker
+- name: create "docker" group
+  group:
+    name: "{{ docker_group }}"
+    state: present
+
+# sudo usermod -aG docker <user>
+- name: add remote user to "docker" group
+  user:
+    name: "{{ docker_user }}"
+    group: "{{ docker_group }}"
+    append: yes
+
+- name: configure sane defaults for logging (docker daemon)
+  template:
+    src: "daemon.json"
+    dest: "/etc/docker/daemon.json"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  notify: restart docker
+
+- name: check current docker-compose version
+  command: docker-compose --version
+  register: docker_compose_current_version
+  changed_when: false
+  failed_when: false
+
+- name: delete existing docker-compose version if different
+  file:
+    path: /usr/local/bin/docker-compose
+    state: absent
+  when:
+    - docker_compose_current_version.stdout is defined and docker_compose_version not in docker_compose_current_version.stdout
+
+- name: check if docker-compose binary exists
+  stat:
+    path: /usr/local/bin/docker-compose
+  register: docker_compose_binary_path
+
+- name: install Docker-compose
+  shell: curl -L "{{ docker_compose_download_url }}" -o /usr/local/bin/docker-compose
+  when: not docker_compose_binary_path.stat.exists
+
+- name: changing perm of /usr/local/bin/docker-compose
+  file: dest=/usr/local/bin/docker-compose mode=a+x
+  when: not docker_compose_binary_path.stat.exists

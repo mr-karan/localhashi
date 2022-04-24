@@ -1,0 +1,11 @@
+---
+# Install and configure a Nomad agent either as a server or client.
+
+- name: Install Nomad
+  import_tasks: install.yml
+
+- name: Enable CNI Plugin
+  import_tasks: cni.yml
+
+- name: Configure Nomad
+  import_tasks: configure.yml

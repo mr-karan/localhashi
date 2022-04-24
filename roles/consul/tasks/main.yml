@@ -1,0 +1,11 @@
+---
+# Install and configure a Consul agent
+
+- name: Include checks/asserts
+  import_tasks: assert.yml
+
+- name: Install Consul
+  import_tasks: install.yml
+
+- name: Configure Consul
+  import_tasks: configure.yml

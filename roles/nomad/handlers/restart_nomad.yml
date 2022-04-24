@@ -1,0 +1,6 @@
+---
+- name: restart nomad
+  service:
+    name: nomad
+    state: restarted
+  listen: "restart nomad"
