@@ -1,0 +1,4 @@
+[cluster]
+localhashi-01 ansible_host=127.0.0.1 ansible_port=2222 ansible_user='vagrant' ansible_ssh_private_key_file='./.vagrant/machines/localhashi-01/virtualbox/private_key'
+localhashi-02 ansible_host=127.0.0.1 ansible_port=2200 ansible_user='vagrant' ansible_ssh_private_key_file='./.vagrant/machines/localhashi-02/virtualbox/private_key'
+localhashi-03 ansible_host=127.0.0.1 ansible_port=2201 ansible_user='vagrant' ansible_ssh_private_key_file='./.vagrant/machines/localhashi-03/virtualbox/private_key'

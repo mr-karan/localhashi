@@ -1,7 +1,7 @@
 ---
 - name: Create configuration
   template:
-    src: consul.hcl.j2
+    src: configs/base.hcl.j2
     dest: "/etc/consul.d/consul.hcl"
     owner: consul
     group: consul
@@ -9,17 +9,19 @@
   notify:
     - restart consul
 
-- block:
-  - name: Create ACL Bootstrap Token
-    import_tasks: acl_bootstrap.yml
+# # NOTE: consul should be running to configure ACL.
+# # So, once the playbook is executed, `consul_enable_acl` is set to true and again executed.
+# - block:
+#   - name: Create ACL Bootstrap Token
+#     import_tasks: acl_bootstrap.yml
 
-  - name: Create ACL Policies
-    import_tasks: acl_policies.yml
+#   - name: Create ACL Policies
+#     import_tasks: acl_policies.yml
 
-  - name: Create ACL Tokens
-    import_tasks: acl_tokens.yml
+#   - name: Create ACL Tokens
+#     import_tasks: acl_tokens.yml
   
-  when: consul_enable_acl
+#   when: consul_enable_acl | bool
 
 - name: Validate config file
   command: "consul validate /etc/consul.d/consul.hcl"
@@ -53,3 +55,9 @@
     name: consul
     state: started
     enabled: yes
+
+- name: Check Consul HTTP API (via TCP socket)
+  wait_for:
+    delay: 15
+    port: 8500
+    host: "{{ consul_address }}"

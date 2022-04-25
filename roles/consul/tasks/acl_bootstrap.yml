@@ -1,4 +1,12 @@
 ---
+- name: Creates directory
+  file:
+    path: "{{consul_bootstrap_dir}}"
+    state: directory
+  when:
+    - consul_bootstrap_node | bool
+  run_once: true
+
 - block:
     - name: Set default value for flag
       set_fact:
@@ -6,7 +14,7 @@
 
     - name: Read token from bootstrapped file
       stat:
-        path: "/etc/consul.d/.consul_bootstrap.json"
+        path: "{{consul_bootstrap_dir}}/.consul_bootstrap.json"
       register: bootstrap_file_result
       ignore_errors: true
 
@@ -16,16 +24,21 @@
       when:
         - not bootstrap_file_result.stat.exists
   when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node | bool
   run_once: true
 
 - block:
     # We use `shell` here because `>` won't work in `command`.
     - name: Bootstrap ACL and store output in a file
-      shell: "consul acl bootstrap -http-addr={{consul_address}}:8500 -format json > /etc/consul.d/.consul_bootstrap.json"
+      become: true
+      shell: "consul acl bootstrap -http-addr={{consul_address}}:8500 -format json > {{consul_bootstrap_dir}}/.consul_bootstrap.json"
+      retries: 30
+      delay: 10
+      register: result
+      until: result.rc == 0
 
   when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node | bool
     - execute_acl_bootstrap
   run_once: true
 
@@ -33,7 +46,7 @@
     # At this point, this file either would be already in the server or it would have been created by consul acl bootstrap command.
     # Read the JSON file and set the token as secret
     - name: Read ACL master token from bootstrap file
-      command: "cat /etc/consul.d/.consul_bootstrap.json"
+      command: "cat {{consul_bootstrap_dir}}/.consul_bootstrap.json"
       register: bootstrap_config_read
       no_log: true
       changed_when: false
@@ -44,8 +57,8 @@
         consul_acl_bootstrap_token: "{{ bootstrap_config_read.stdout | from_json | json_query(query) }}"
       vars:
         query: "SecretID"
-      no_log: true
+      # no_log: true
 
   when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node | bool
   run_once: true

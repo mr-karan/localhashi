@@ -11,7 +11,7 @@
         - '"Invalid Token: SecretID is already in use" not in consul_acl_default_token_read_result.stderr'
 
   when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node
   run_once: true
 
 # Create Agent Token
@@ -26,35 +26,20 @@
         - '"Invalid Token: SecretID is already in use" not in consul_acl_agent_token_read_result.stderr'
 
   when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node
   run_once: true
 
-# Create Nomad Server Token
+# Create Nomad Agent Token
 - block:
-    - name: Create Nomad Server Token only if it doesn't exist
+    - name: Create Nomad Agent Token only if it doesn't exist
       ansible.builtin.shell:
-        cmd: 'consul acl token create -http-addr={{consul_address}}:8500 -description "Nomad server Token used for registering services" -policy-name nomad-server-policy -secret={{consul_acl_nomad_server_token}} -token={{ consul_acl_bootstrap_token }}'
-      register: consul_acl_nomad_server_token_read_result
+        cmd: 'consul acl token create -http-addr={{consul_address}}:8500 -description "Token used by Nomad agents" -policy-name nomad-agent-policy -secret={{consul_acl_nomad_agent_token}} -token={{ consul_acl_bootstrap_token }}'
+      register: consul_acl_nomad_agent_token_read_result
       # Only error out if the error is something else apart from the token already being existing.
       failed_when:
-        - consul_acl_nomad_server_token_read_result.rc != 0
-        - '"Invalid Token: SecretID is already in use" not in consul_acl_nomad_server_token_read_result.stderr'
+        - consul_acl_nomad_agent_token_read_result.rc != 0
+        - '"Invalid Token: SecretID is already in use" not in consul_acl_nomad_agent_token_read_result.stderr'
 
   when:
-    - consul_node_role == 'bootstrap'
-  run_once: true
-
-# Create Nomad Client Token
-- block:
-    - name: Create Nomad Client Token only if it doesn't exist
-      ansible.builtin.shell:
-        cmd: 'consul acl token create -http-addr={{consul_address}}:8500 -description "Nomad client Token used for registering services" -policy-name nomad-client-policy -secret={{consul_acl_nomad_client_token}} -token={{ consul_acl_bootstrap_token }}'
-      register: consul_acl_nomad_client_token_read_result
-      # Only error out if the error is something else apart from the token already being existing.
-      failed_when:
-        - consul_acl_nomad_client_token_read_result.rc != 0
-        - '"Invalid Token: SecretID is already in use" not in consul_acl_nomad_client_token_read_result.stderr'
-
-  when:
-    - consul_node_role == 'bootstrap'
+    - consul_bootstrap_node
   run_once: true

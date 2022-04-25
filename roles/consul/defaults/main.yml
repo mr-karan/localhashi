@@ -4,19 +4,13 @@
 cluster_members:
   - "10.100.0.100"
 
-consul_iface: "\
-  {% if ansible_os_family == 'Windows' %}\
-  {{ lookup('env','CONSUL_IFACE') | default(ansible_interfaces[0].interface_name, true) }}\
-  {% else %}\
-  {{ lookup('env','CONSUL_IFACE') | default(ansible_default_ipv4.interface, true) }}\
-  {% endif %}"
-
 consul_version: 1.12.0-1
 
 # Config params
 consul_dc: dc1
 consul_bootstrap_expect: 1
 consul_policies_dir: /etc/consul/policies/
+consul_bootstrap_dir: /etc/consul/bootstrap/
 consul_address: "{{ansible_enp0s8.ipv4.address}}"
 consul_enable_server: true
 # NOTE: Change this in playbook
@@ -24,8 +18,10 @@ consul_encrypt_key: jCnlucy8KmYVmtu7PykQnog7nbPoa/icPeVu7agOK74=
 
 # ACL Config.
 consul_enable_acl: false
-consul_acl_bootstrap: false
 consul_acl_agent_token: 05285d48-e084-4578-98b1-3e42029bc834
 consul_acl_default_token: 1cd4e19a-a673-4351-a457-30e7d6200a13
 consul_acl_nomad_server_token: 04e3eef3-3d45-4ca7-918d-3cf44eca4c01
 consul_acl_nomad_client_token: 89fcda88-2fa9-4c96-b63e-23e7d0ec1a14
+
+# Inventory Vars.
+consul_bootstrap_node: false

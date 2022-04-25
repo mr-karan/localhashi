@@ -4,7 +4,17 @@
 LINUX_BASE_BOX = "ubuntu/focal64"
 
 SINGLE_BOX_IP_ADDRESS = "10.100.0.100"
-CLUSTER_IP_ADDRESS = ["10.100.0.11","10.100.0.12","10.100.0.13"]
+
+SINGLE_NODE_HOST_VARS =  {
+  "localhashi" => {"consul_bootstrap_node" => true, "nomad_bootstrap_node" => true}
+}
+
+CLUSTER_NODE_HOST_VARS =  {
+  "localhashi-01" => {"consul_bootstrap_node" => true, "nomad_bootstrap_node" => true},
+  "localhashi-02" => {"consul_bootstrap_node" => false, "nomad_bootstrap_node" => false},
+  "localhashi-03" => {"consul_bootstrap_node" => false, "nomad_bootstrap_node" => false}
+}
+
 
 Vagrant.require_version ">= 2.2.19"
 
@@ -12,7 +22,7 @@ Vagrant.require_version ">= 2.2.19"
 Vagrant.configure("2") do |config|
 
 	# Single node VM which comes with consul and nomad running in client+server modes.
-	config.vm.define "single", autostart: true, primary: true do |vmCfg|
+	config.vm.define "localhashi", autostart: true, primary: true do |vmCfg|
 		vmCfg.vm.box = LINUX_BASE_BOX
 		vmCfg.vm.hostname = "localhashi"
 		vmCfg = configureProviders vmCfg,
@@ -25,12 +35,8 @@ Vagrant.configure("2") do |config|
 
         # Provision consul and nomad as servers.
         vmCfg.vm.provision "ansible" do |ansible|
-            ansible.playbook = "./playbooks/playbook.yml"
-            ansible.extra_vars = {
-                cluster_members: [SINGLE_BOX_IP_ADDRESS],
-                consul_bootstrap_expect: 1,
-                nomad_bootstrap_expect: 1
-            }
+            ansible.playbook = "./playbooks/single.yml"
+			ansible.host_vars = SINGLE_NODE_HOST_VARS
         end
 
 	end
@@ -50,15 +56,12 @@ Vagrant.configure("2") do |config|
 				vmCfg.vm.network :private_network, ip: serverIP
 			end
 
-			# Provision consul and nomad as servers.
+			# # Provision consul and nomad as servers.
 			vmCfg.vm.provision "ansible" do |ansible|
-				ansible.playbook = "./playbooks/playbook.yml"
-				ansible.extra_vars = {
-					cluster_members: CLUSTER_IP_ADDRESS,
-					consul_bootstrap_expect: 3,
-					nomad_bootstrap_expect: 3
-				}
+				ansible.playbook = "./playbooks/cluster.yml"
+				ansible.host_vars = CLUSTER_NODE_HOST_VARS
 			end
+
 		end
 	end
 
@@ -74,13 +77,6 @@ def configureProviders(vmCfg, cpus: "2", memory: "2048")
 	return vmCfg
 end
 
-def configureProvisioners(config)
-    config.vm.provision "ansible" do |ansible|
-        ansible.playbook = "./playbooks/playbook.yml"
-    end
-
-    return config
-end
 
 def suggestedCPUCores()
 	case RbConfig::CONFIG['host_os']

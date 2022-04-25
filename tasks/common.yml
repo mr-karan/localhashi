@@ -1,0 +1,26 @@
+# Set hostnames.
+- name: Set hostnames in server
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname_short }}"
+
+# Upgrade apt packages.
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 86400 #One day
+  tags: [never, upgrade_packages]
+
+# Install common packages
+- name: Install a list of packages
+  apt:
+    pkg:
+    - unzip
+
+- name: Set timezone
+  file:
+    src: "/usr/share/zoneinfo/{{ timezone }}"
+    dest: "/etc/localtime"
+    state: link
+    force: yes

@@ -9,11 +9,6 @@
   notify:
     - restart nomad
 
-- block:
-  - name: Create ACL Bootstrap Token
-    import_tasks: acl_bootstrap.yml
-  
-  when: nomad_enable_acl
 
 - name: Start Nomad
   service:

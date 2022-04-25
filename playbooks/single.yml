@@ -1,0 +1,41 @@
+- hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Setup common stuff
+      import_tasks: ../tasks/common.yml
+      vars:
+        timezone: "{{ lookup('env','TIMEZONE') | default('Asia/Kolkata', true) }}"
+
+  roles:
+    - role: docker
+      become: true
+      docker_compose_version: 1.29.2
+
+    - role: consul
+      vars:
+        consul_dc: localhashi
+        consul_version: 1.12.0-1
+        consul_enable_server: true
+        consul_enable_acl: "{{ lookup('env','CONSUL_ENABLE_ACL') | default(false, true) }}"
+        consul_encrypt_key: "{{ lookup('env','CONSUL_ENCRYPT_KEY') }}"
+        consul_acl_agent_token: "{{ lookup('env','CONSUL_ACL_AGENT_TOKEN') }}"
+        consul_acl_default_token: "{{ lookup('env','CONSUL_ACL_DEFAULT_TOKEN') }}"
+        consul_acl_nomad_agent_token: "{{ lookup('env','CONSUL_ACL_NOMAD_AGENT_TOKEN') }}"
+        consul_bootstrap_expect: 1
+        cluster_members:
+          - "10.100.0.100"
+
+    - role: nomad
+      vars:
+        nomad_dc: localhashi
+        nomad_version: 1.2.6
+        nomad_encrypt_key: "{{ lookup('env','NOMAD_ENCRYPT_KEY') }}"
+        nomad_enable_server: true
+        nomad_enable_client: true
+        nomad_enable_acl: "{{ lookup('env','NOMAD_ENABLE_ACL') | default(false, true) }}"
+        consul_acl_nomad_token: "{{ lookup('env','CONSUL_ACL_NOMAD_TOKEN') }}"
+        nomad_bootstrap_expect: 1
+        cluster_members:
+          - "10.100.0.100"

@@ -44,8 +44,8 @@ server {
 
 consul {
   address = "{{consul_address}}:8500"
-  {% if consul_acl_nomad_token is defined %}
-  token = "{{consul_acl_nomad_token}}"
+  {% if consul_acl_nomad_agent_token is defined %}
+  token = "{{consul_acl_nomad_agent_token}}"
   {% endif %}
 }
 

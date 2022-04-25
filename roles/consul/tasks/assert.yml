@@ -7,9 +7,3 @@
   when:
     - ansible_distribution == "Ubuntu"
     - ansible_distribution_version is version_compare(18.04, '<')
-
-- name: Check specified ethernet interface
-  fail:
-    msg: "The ethernet interface specified by consul_iface was not found."
-  when:
-    - consul_iface not in ansible_interfaces

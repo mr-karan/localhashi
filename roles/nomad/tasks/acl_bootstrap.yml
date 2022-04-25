@@ -1,4 +1,12 @@
 ---
+- name: Creates directory
+  file:
+    path: "{{nomad_bootstrap_dir}}"
+    state: directory
+  when:
+    - nomad_bootstrap_node | bool
+  run_once: true
+
 - block:
     - name: Set default value for flag
       set_fact:
@@ -6,7 +14,7 @@
 
     - name: Read token from bootstrapped file
       stat:
-        path: "/etc/nomad.d/.nomad_bootstrap.json"
+        path: "{{nomad_bootstrap_dir}}/.nomad_bootstrap.json"
       register: bootstrap_file_result
       ignore_errors: true
 
@@ -17,27 +25,24 @@
         - not bootstrap_file_result.stat.exists
 
   when:
-    - nomad_node_role == 'bootstrap'
+    - nomad_bootstrap_node | bool
   run_once: true
 
 - block:
     # We use `shell` here because `>` won't work in `command`.
     - name: Bootstrap ACL and store output in a file
-      shell: "nomad acl bootstrap -address=http://{{consul_address}}:4646 -json > {{bootstrap_acl_config_dir.path}}/bootstrap.json"
-
-    - name: Store token output in S3
-      command: "aws s3 cp {{bootstrap_acl_config_dir.path}}/bootstrap.json s3://{{nomad_bootstrap_s3}}/nomad/acl/"
+      shell: "nomad acl bootstrap -address=http://{{consul_address}}:4646 -json > {{nomad_bootstrap_dir}}/.nomad_bootstrap.json"
 
   when:
-    - nomad_node_role == 'bootstrap'
+    - nomad_bootstrap_node | bool
     - execute_acl_bootstrap
   run_once: true
 
 - block:
-    # At this point, this file either would be fetched from S3 or it would have been created by nomad acl bootstrap command.
+    # At this point, this file either would be already in the server or it would have been created by nomad acl bootstrap command.
     # Read the JSON file and set the token as secret
     - name: Read ACL master token from bootstrap file
-      command: "cat {{bootstrap_acl_config_dir.path}}/bootstrap.json"
+      command: "cat {{nomad_bootstrap_dir}}/.nomad_bootstrap.json"
       register: bootstrap_config_read
       no_log: true
       changed_when: false
@@ -51,5 +56,5 @@
       no_log: true
 
   when:
-    - nomad_node_role == 'bootstrap'
+    - nomad_bootstrap_node | bool
   run_once: true

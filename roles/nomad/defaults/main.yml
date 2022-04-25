@@ -10,6 +10,7 @@ nomad_cni_version: "v1.1.1"
 # Config params
 nomad_dc: dc1
 nomad_bootstrap_expect: 1
+nomad_bootstrap_dir: /etc/nomad/bootstrap/
 consul_address: "{{ansible_enp0s8.ipv4.address}}"
 nomad_enable_server: true
 nomad_enable_client: true
@@ -18,6 +19,7 @@ nomad_encrypt_key: jCnlucy8KmYVmtu7PykQnog7nbPoa/icPeVu7agOK74=
 
 # ACL Config.
 nomad_enable_acl: false
-nomad_acl_bootstrap: false
+consul_acl_nomad_agent_token: b771c8db-bfba-4ee1-964e-e2c7fc7faefa
 
-# consul_acl_nomad_token: b771c8db-bfba-4ee1-964e-e2c7fc7faefa
+# Inventory Vars.
+nomad_bootstrap_node: false

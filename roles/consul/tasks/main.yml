@@ -9,3 +9,36 @@
 
 - name: Configure Consul
   import_tasks: configure.yml
+
+# Need consul running to configure ACL.
+- block:
+  - name: Template ACL variables
+    template:
+      src: configs/acl.hcl.j2
+      dest: "/etc/consul.d/acl.hcl"
+      owner: consul
+      group: consul
+      mode: 0644
+
+  - name: Restart consul before configuring ACLs
+    service:
+      name: consul
+      state: restarted
+
+  - name: Check Consul HTTP API (via TCP socket)
+    wait_for:
+      delay: 15
+      port: 8500
+      host: "{{ consul_address }}"
+
+  - name: Create ACL Bootstrap Token
+    import_tasks: acl_bootstrap.yml
+
+  - name: Create ACL Policies
+    import_tasks: acl_policies.yml
+
+  - name: Create ACL Tokens
+    import_tasks: acl_tokens.yml
+  
+  when: consul_enable_acl | bool
+  tags: ["never", "configure_acl"]

@@ -9,3 +9,36 @@
 
 - name: Configure Nomad
   import_tasks: configure.yml
+
+- block:
+  - name: Create ACL Bootstrap Token
+    import_tasks: acl_bootstrap.yml
+  
+  when: nomad_enable_acl
+
+# Need nomad running to configure ACL.
+- block:
+  - name: Template ACL variables
+    template:
+      src: nomad.hcl.j2
+      dest: "/etc/nomad.d/nomad.hcl"
+      owner: nomad
+      group: nomad
+      mode: 0644
+
+  - name: Restart nomad before configuring ACLs
+    service:
+      name: nomad
+      state: restarted
+
+  - name: Check Nomad HTTP API (via TCP socket)
+    wait_for:
+      delay: 15
+      port: 4646
+      host: "{{ consul_address }}"
+
+  - name: Create ACL Bootstrap Token
+    import_tasks: acl_bootstrap.yml
+ 
+  when: nomad_enable_acl | bool
+  tags: ["never", "configure_acl"]
