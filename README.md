@@ -1,6 +1,29 @@
 # localhashi
 
-_A local "Hashistack" lab suitable for experimenting with Nomad deployments._
+A local "Hashistack" lab suitable for experimenting with Nomad deployments. Spins up Nomad and Consul in Vagrant machines which can be used for local development purposes.
+
+- [localhashi](#localhashi)
+  - [Overview](#overview)
+    - [But `-dev` mode exists](#but--dev-mode-exists)
+  - [Running](#running)
+    - [Prerequisite](#prerequisite)
+    - [Environment Variables](#environment-variables)
+      - [Gossip Encryption](#gossip-encryption)
+      - [ACL](#acl)
+    - [Spawn a single node](#spawn-a-single-node)
+    - [Spawn a cluster](#spawn-a-cluster)
+    - [Destroying nodes](#destroying-nodes)
+  - [Networking](#networking)
+    - [Single Node](#single-node)
+    - [Cluster](#cluster)
+  - [Advanced Usage](#advanced-usage)
+    - [Configure ACL](#configure-acl)
+  - [Addons](#addons)
+    - [Docker Registry](#docker-registry)
+      - [Running the registry](#running-the-registry)
+      - [Pushing images](#pushing-images)
+  - [References](#references)
+  - [LICENSE](#license)
 
 ## Overview
 
@@ -46,6 +69,27 @@ git clone git@github.com:mr-karan/localhashi.git
 
 ```
 * 10.100.0.0/24
+```
+
+### Environment Variables
+
+```
+$ cp env.sample .env
+```
+
+#### Gossip Encryption
+
+- For `CONSUL_ENCRYPT_KEY`, you can generate with: `consul keygen`
+- For `NOMAD_ENCRYPT_KEY`, you can generate with: `nomad operator keygen`
+
+#### ACL
+
+ACL is by default disabled. However, if you wish to use ACL (refer to [ACL instructions](#configure-acl)), you can generate a UUIDv4 and set them as token values. Here's a `python` snippet of the same:
+
+```python
+import uuid
+uuid.uuid4()
+UUID('a285a289-ade0-4394-a91b-4bef349f3f68')
 ```
 
 ### Spawn a single node
@@ -173,6 +217,13 @@ docker tag ubuntu:latest 10.100.0.100:32000/ubuntu:latest
 ```
 
 - For pulling images, specify `10.100.0.100:32000/ubuntu:latest` or `registry.service.consul:32000/ubuntu:latest` in `task.config.image` section of Nomad job spec. Refer to [sleep.nomad](./deployments/sleep.nomad) for an example.
+
+## References
+
+- https://github.com/servian/hashiqube
+- https://github.com/egmanoj/hashilab
+- https://github.com/ansible-community/ansible-consul/
+- https://github.com/ansible-community/ansible-nomad/
 
 ## LICENSE
 
