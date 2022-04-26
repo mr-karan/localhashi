@@ -21,6 +21,10 @@ acl {
 {% if nomad_enable_client %}
 client {
   enabled = true
+  host_network "private" {
+    interface = "enp0s8"
+    reserved_ports = "22,80"
+  }
 }
 
 plugin "docker" {

@@ -13,7 +13,7 @@ up-single: ## Use this to start a single node VM.
 
 up-cluster: ## Use this to start a 3 node cluster.
 	@echo "==> Starting a 3 node cluster..."
-	@vagrant up /localhashi/ --provision --parallel
+	@vagrant up /localhashi-0/ --provision --parallel
 	@echo "==> Finished setting up the VM. You can visit http://10.100.0.11:4646 for Nomad UI and http://10.100.0.11:8500/ for Consul UI."
 
 down: ## Destroys all VMs listed in the Vagrantfile.
@@ -27,8 +27,8 @@ reboot: ## Reboots existing VMs
 status: ## Shows status of all VMs listed in the Vagrantfile.
 	@vagrant status
 
-configure-acl-cluster:
-	ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ./.vagrant/provisioners/ansible/inventory playbooks/cluster.yml --extra-vars "consul_enable_acl=true nomad_enable_acl=true" --tags="configure_acl"
-
-configure-acl-single:
+configure-acl-single: ## Sets up ACL for Nomad and Consul for a single node.
 	ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ./.vagrant/provisioners/ansible/inventory playbooks/single.yml --extra-vars "consul_enable_acl=true nomad_enable_acl=true" --tags="configure_acl"
+
+configure-acl-cluster: ## Sets up ACL for Nomad and Consul for a cluster.
+	ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ./.vagrant/provisioners/ansible/inventory playbooks/cluster.yml --extra-vars "consul_enable_acl=true nomad_enable_acl=true" --tags="configure_acl"
