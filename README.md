@@ -185,6 +185,13 @@ make configure-acl-cluster
 
 Please read [Nomad ACL](https://learn.hashicorp.com/tutorials/nomad/access-control) and [Consul ACL](https://www.consul.io/docs/security/acl) docs to familiarize yourself with ACL concepts like Policies, Tokens etc.
 
+You can find the bootstrap token of Nomad and Consul at the following places:
+
+```bash
+cat /etc/nomad/bootstrap/.nomad_bootstrap.json
+cat /etc/consul/bootstrap/.consul_bootstrap.json
+```
+
 ## Addons
 
 ### Docker Registry
@@ -216,7 +223,13 @@ The registry should be available at `<IP>:32000` from your local machine. The IP
 docker tag ubuntu:latest 10.100.0.100:32000/ubuntu:latest
 ```
 
-- For pulling images, specify `10.100.0.100:32000/ubuntu:latest` or `registry.service.consul:32000/ubuntu:latest` in `task.config.image` section of Nomad job spec. Refer to [sleep.nomad](./deployments/sleep.nomad) for an example.
+- Push the image
+
+```
+docker push 10.100.0.100:32000/ubuntu:latest
+```
+
+- For pulling images, specify `10.100.0.100:32000/ubuntu:latest` (if you're using a single node setup) or `registry.service.consul:32000/ubuntu:latest` in `task.config.image` section of Nomad job spec. Refer to [sleep.nomad](./deployments/sleep.nomad) for an example.
 
 ## References
 
