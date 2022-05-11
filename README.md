@@ -1,3 +1,5 @@
+<a href="https://zerodha.tech"><img src="https://zerodha.tech/static/images/github-badge.svg" align="right" /></a>
+
 # localhashi
 
 A local "Hashistack" lab suitable for experimenting with Nomad deployments. Spins up Nomad and Consul in Vagrant machines which can be used for local development purposes.
